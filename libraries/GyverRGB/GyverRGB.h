@@ -5,6 +5,11 @@
 
 #define LED_OFF     0
 #define DO_NOTHIHG  1
+#define DO_FADE_TO  2
+
+#define R           0
+#define G           1
+#define B           2
 
 #define ALLOW_ANYPWM 0		// (0 / 1) - включить или отключить ANYPWM
 // необходимо отключить, если этот режим не нужен и вы сами используете прерывания timer2 (COMPA_vect)
@@ -83,6 +88,8 @@ class GRGB
 	uint8_t _rpin = 0, _gpin = 0, _bpin = 0;	// пины
 	float _r = 0, _g = 0, _b = 0;				// цвета
 	uint8_t _state = DO_NOTHIHG;
+	float _stepsFadeTo[3];
+	uint8_t _newColorFadeTo[3];
 	boolean _reverse_flag = false;
 	boolean _PWMmode = false;
 	boolean _brightFlag = false;

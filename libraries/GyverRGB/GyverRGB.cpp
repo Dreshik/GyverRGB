@@ -118,6 +118,33 @@ void GRGB::tick() {
 
 	switch (_state) {
 		case DO_NOTHIHG: break;
+		case DO_FADE_TO:
+		{
+			_r += _stepsFadeTo[R];
+			if (abs(_r - _newColorFadeTo[R]) < 1) {
+				_r = _newColorFadeTo[R];
+				_stepsFadeTo[R]= 0;
+			}
+
+			_g += _stepsFadeTo[G];
+			if (abs(_g - _newColorFadeTo[G]) < 1) {
+				_g = _newColorFadeTo[G];
+				_stepsFadeTo[G]= 0;
+			}
+
+			_b += _stepsFadeTo[B];
+			if (abs(_b - _newColorFadeTo[B]) < 1) {
+				_b = _newColorFadeTo[B];
+				_stepsFadeTo[B]= 0;
+			}
+
+			if ((_stepsFadeTo[R] == 0) &&
+			    (_stepsFadeTo[G] == 0) &&
+			    (_stepsFadeTo[B] == 0))
+				setState(DO_NOTHIHG);
+
+			break;
+		}
 	}
 
 	setRGB();
@@ -310,40 +337,12 @@ void GRGB::fadeTo(byte new_r, byte new_g, byte new_b, uint16_t fadeTime) {
 	int deltaG = new_g - _g;
 	int deltaB = new_b - _b;
 
-	// ищем наибольшее изменение по модулю
-	int deltaMax = 0;
-	if (abs(deltaR) > deltaMax) deltaMax = abs(deltaR);
-	if (abs(deltaG) > deltaMax) deltaMax = abs(deltaG);
-	if (abs(deltaB) > deltaMax) deltaMax = abs(deltaB);
-
 	// Шаг изменения цвета
-	float stepR = (float)deltaR / deltaMax;
-	float stepG = (float)deltaG / deltaMax;
-	float stepB = (float)deltaB / deltaMax;
+	_stepsFadeTo[R] = (float)deltaR / fadeTime;
+	_stepsFadeTo[G] = (float)deltaG / fadeTime;
+	_stepsFadeTo[B] = (float)deltaB / fadeTime;
 
-	// Защита от деления на 0. Завершаем работу
-	if (deltaMax == 0) return;
-
-	// Расчет задержки в мкс
-	uint32_t stepDelay = (float) 1000 * fadeTime / deltaMax;
-
-	// Дробные величины для плавности, начальное значение = текущему у светодиода
-	float thisR = _r, thisG = _g, thisB = _b;
-
-	// Основной цикл изменения яркости
-	for (int i = 0; i < deltaMax; i++) {
-		thisR += stepR;
-		thisG += stepG;
-		thisB += stepB;
-		
-		_r = thisR;
-		_g = thisG;
-		_b = thisB;
-		GRGB::setRGB();
-		
-		uint32_t us_timer = micros();
-		while (micros() - us_timer <= stepDelay);
-	}
+	setState(DO_FADE_TO);
 }
 
 void GRGB::colorWheel(int color) {
