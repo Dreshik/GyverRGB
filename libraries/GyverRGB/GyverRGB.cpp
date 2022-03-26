@@ -105,6 +105,25 @@ GRGB::GRGB(uint8_t rpin, uint8_t gpin, uint8_t bpin, boolean pwmmode) {
 		anyPWMpinRGB(_bpin);
 	}
 }
+
+void GRGB::setState(uint8_t new_state)
+{
+	_state = new_state;
+}
+
+void GRGB::tick() {
+	if (_state == LED_OFF) return;
+
+	_workTimeMS++;
+
+	switch (_state) {
+		case DO_NOTHIHG: break;
+	}
+
+	setRGB();
+
+}
+
 // для пинов 3, 9, 10. Для 5 и 6 делать вручную, т.к. влияет на millis() и прочие
 void GRGB::highFrequency(long frequency) {
 	InitTimersSafe();

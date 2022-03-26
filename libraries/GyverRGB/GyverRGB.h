@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include "PWM.h"
 
+#define LED_OFF     0
+#define DO_NOTHIHG  1
+
 #define ALLOW_ANYPWM 0		// (0 / 1) - включить или отключить ANYPWM
 // необходимо отключить, если этот режим не нужен и вы сами используете прерывания timer2 (COMPA_vect)
 
@@ -71,11 +74,15 @@ class GRGB
 	void fadeTo(uint8_t new_r, uint8_t new_g, uint8_t new_b, uint16_t fadeTime);
 	
 	byte showR, showG, showB;		// сигнал для отладки
-	
+
+	void setState(uint8_t new_state);
+	void tick();
+
   private:
 	void setRGB();
 	uint8_t _rpin = 0, _gpin = 0, _bpin = 0;	// пины
-	uint8_t _r = 0, _g = 0, _b = 0;				// цвета	
+	float _r = 0, _g = 0, _b = 0;				// цвета
+	uint8_t _state = DO_NOTHIHG;
 	boolean _reverse_flag = false;
 	boolean _PWMmode = false;
 	boolean _brightFlag = false;
@@ -95,6 +102,7 @@ class GRGB
 	int _vcc = 0;
 	int _maxCurrent = 0;
 	int _numLeds = 0;
+	uint32_t _workTimeMS = 0;					// время работы ленты
 };
 
 void anyPWMinitRGB(byte prescaler);									
