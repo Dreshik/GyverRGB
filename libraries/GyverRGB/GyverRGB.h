@@ -3,6 +3,17 @@
 #include <Arduino.h>
 #include "PWM.h"
 
+#define REVERSE_FLAG      0x1
+#define PWM_MODE_FLAG     0x2
+#define BRIGHT_FLAG       0x4
+#define MAX_CUR_FLAG      0x8
+#define CONST_BR_FLAG     0x16
+#define GAMMA_FLAG        0x20
+#define HIGH_FREQ_FLAG    0x40
+#define LUT_FLAG          0x80
+#define MIN_PWM_FLAG      0x100
+#define GAMMA_BRIGHT_FLAG 0x200
+
 #define ALLOW_ANYPWM 0		// (0 / 1) - включить или отключить ANYPWM
 // необходимо отключить, если этот режим не нужен и вы сами используете прерывания timer2 (COMPA_vect)
 
@@ -74,20 +85,12 @@ class GRGB
 	
   private:
 	void setRGB();
+	void chahge_flag(boolean value, uint32_t flag);
+	boolean flag_is_set(uint32_t flag);
 	uint8_t _rpin = 0, _gpin = 0, _bpin = 0;	// пины
 	uint8_t _r = 0, _g = 0, _b = 0;				// цвета	
-	boolean _reverse_flag = false;
-	boolean _PWMmode = false;
-	boolean _brightFlag = false;
 	float _brightC = 1.0;
 	float _constCoef = 0.0;
-	boolean _maxCurFlag = false;
-	boolean _constBrFlag = false;
-	boolean _gammaFlag;
-	boolean _highFreqFlag = false;
-	boolean _LUTflag = false;
-	boolean _minPWMflag = false;
-	boolean _gammaBright = false;
 	byte _minPWMval;
 	float _rc = 1.0, _gc = 1.0, _bc = 1.0;
 	float _gammaR = 1.0;
@@ -95,6 +98,7 @@ class GRGB
 	int _vcc = 0;
 	int _maxCurrent = 0;
 	int _numLeds = 0;
+	uint32_t _flags = 0;
 };
 
 void anyPWMinitRGB(byte prescaler);									

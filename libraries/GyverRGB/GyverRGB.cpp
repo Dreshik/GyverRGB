@@ -87,13 +87,13 @@ GRGB::GRGB(uint8_t rpin, uint8_t gpin, uint8_t bpin) {
 }
 
 GRGB::GRGB(uint8_t rpin, uint8_t gpin, uint8_t bpin, boolean pwmmode) {
-	_PWMmode = pwmmode;
-	
+	chahge_flag(pwmmode, PWM_MODE_FLAG);
+
 	_rpin = rpin;
 	_gpin = gpin;
 	_bpin = bpin;
-	
-	if (!_PWMmode) {	
+
+	if (!flag_is_set(PWM_MODE_FLAG)) {
 		pinMode(_rpin, OUTPUT);
 		pinMode(_gpin, OUTPUT);
 		pinMode(_bpin, OUTPUT);
@@ -111,49 +111,49 @@ void GRGB::highFrequency(long frequency) {
 	// таймер 2
 	SetPinFrequencySafe(3, frequency);
 	// на пине 11 не работает
-	
+
 	// таймер 1
 	SetPinFrequencySafe(9, frequency);
 	SetPinFrequencySafe(10, frequency);
-	
-	_highFreqFlag = true;
+
+	chahge_flag(true, HIGH_FREQ_FLAG);
 }
 
 void GRGB::setDirection(boolean direction) {
-	_reverse_flag = direction;
+	chahge_flag(direction, REVERSE_FLAG);
 }
 
 void GRGB::setBrightness(byte bright) {
-	_brightFlag = true;
+	chahge_flag(true, BRIGHT_FLAG);
 	_brightC = (float)bright / 255;
 	GRGB::setRGB();
 }
 
 void GRGB::setGammaBright(boolean val) {
-	_gammaBright = val;
+	chahge_flag(val, GAMMA_BRIGHT_FLAG);
 }
 
 void GRGB::setMinPWM(byte val) {
-	_minPWMflag = true;
-	_minPWMval = val;	
+	_minPWMval = val;
+	chahge_flag(true, MIN_PWM_FLAG);
 }
 
 void GRGB::setMaxCurrent(uint16_t numLeds, float vcc, int maxCur) {
-	_maxCurFlag = true;
+	chahge_flag(true, MAX_CUR_FLAG);
 	_vcc = vcc;
 	_maxCurrent = maxCur;
 	_numLeds = numLeds;	
 }
 
 void GRGB::setLUT(float rc, float gc, float bc) {
-	_LUTflag = true;
+	chahge_flag(true, LUT_FLAG);
 	_rc = rc;
 	_gc = gc;
 	_bc = bc;
 }
 
 void GRGB::constantBrightTick(int minVolts, int vcc) {
-	_constBrFlag = true;
+	chahge_flag(true, CONST_BR_FLAG);
 	if (vcc > minVolts) {
 		int minCur = minVolts * 3.8 - 28700;
 		int nowCur = vcc * 3.8 - 28700;
@@ -163,10 +163,10 @@ void GRGB::constantBrightTick(int minVolts, int vcc) {
 }
 
 void GRGB::gammaTick(int vcc) {
-	_gammaFlag = true;
+	chahge_flag(true, GAMMA_FLAG);
 	if (vcc < 12000) {
 		_gammaR = (float)vcc / 10000 - 0.5;
-		_gammaG = (float)vcc / 10000 - 0.3;	
+		_gammaG = (float)vcc / 10000 - 0.3;
 	} else {
 		_gammaR = 1;
 		_gammaG = 1;
@@ -366,20 +366,20 @@ void GRGB::setRGB() {
 	showR = _r;
 	showG = _g;
 	showB = _b;
-	
-	if (_brightFlag) {
+
+	if (flag_is_set(BRIGHT_FLAG)) {
 		showR *= (float)_brightC;
 		showG *= (float)_brightC;
 		showB *= (float)_brightC;
 	}
-	
-	if (_constBrFlag) {
+
+	if (flag_is_set(CONST_BR_FLAG)) {
 		showR *= (float)_constCoef;
 		showG *= (float)_constCoef;
 		showB *= (float)_constCoef;
 	}
-	
-	if (_maxCurFlag) {
+
+	if (flag_is_set(MAX_CUR_FLAG)) {
 		float maxColorCur = ((float)_vcc * 3.8 - 28700) / 3000;	// макс ток (ма) на один цвет при напряжении vcc
 		float ledCur = (float)(showR + showG + showB) * maxColorCur / 255;	// реальный ток на один LED
 		int comLedCur = ledCur * _numLeds;							// ток всей ленты
@@ -390,38 +390,38 @@ void GRGB::setRGB() {
 			showB *= (float)coef;
 		}
 	}
-	
-	if (_gammaFlag) {
+
+	if (flag_is_set(GAMMA_FLAG)) {
 		showR *= (float)_gammaR;
 		showG *= (float)_gammaG;
 	}
-	
-	if (_LUTflag) {
+
+	if (flag_is_set(LUT_FLAG)) {
 		showR *= (float)_rc;
 		showG *= (float)_gc;
 		showB *= (float)_bc;
 	}
-	
-	if (_gammaBright) {
+
+	if (flag_is_set(GAMMA_BRIGHT_FLAG)) {
 		showR = pgm_read_byte(&(CRTgamma[showR]));
 		showG = pgm_read_byte(&(CRTgamma[showG]));
 		showB = pgm_read_byte(&(CRTgamma[showB]));
 	}
-	
-	if (_minPWMflag) {
+
+	if (flag_is_set(MIN_PWM_FLAG)) {
 		showR = map(showR, 0, 255, _minPWMval, 255);
 		showG = map(showG, 0, 255, _minPWMval, 255);
 		showB = map(showB, 0, 255, _minPWMval, 255);
 	}
-	
-	if (_reverse_flag) {
+
+	if (flag_is_set(REVERSE_FLAG)) {
 		showR = 255 - showR;
 		showG = 255 - showG;
 		showB = 255 - showB;
 	}
-	
-	if (!_PWMmode) {						// режим NORM_PWM
-		if (_highFreqFlag) {
+
+	if (!flag_is_set(PWM_MODE_FLAG)) {						// режим NORM_PWM
+		if (flag_is_set(HIGH_FREQ_FLAG)) {
 			pwmWrite(_rpin, showR);
 			pwmWrite(_gpin, showG);
 			pwmWrite(_bpin, showB);
@@ -430,12 +430,27 @@ void GRGB::setRGB() {
 			analogWrite(_gpin, showG);
 			analogWrite(_bpin, showB);
 		}
-		
 	} else {								// режим ANY_PWM
 		anyPWMRGB(_rpin, showR);
 		anyPWMRGB(_gpin, showG);
 		anyPWMRGB(_bpin, showB);
 	}
+}
+
+void GRGB::chahge_flag(boolean value, uint32_t flag)
+{
+	if (value)
+	{
+		_flags |= flag;
+		return;
+	}
+
+	_flags &= ~flag;
+}
+
+inline boolean GRGB::flag_is_set(uint32_t flag)
+{
+	return _flags & flag;
 }
 
 // ***************************** anyPWM *****************************
