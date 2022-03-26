@@ -145,10 +145,33 @@ void GRGB::tick() {
 
 			break;
 		}
+		case DO_COLOR_WHEEL:
+		{
+			if ((_workTimeMS - _previousEventTimeMS) <= _colorWheelIncDelay)
+				break;
+
+			if (++_colorWheelPosition > 1530)
+				_colorWheelPosition = 0;
+
+			colorWheel(_colorWheelPosition);
+			_previousEventTimeMS = _workTimeMS;
+
+			break;
+		}
 	}
 
 	setRGB();
 
+}
+
+void GRGB::moveColorWheel(uint32_t colorWheelIncDelay, uint16_t startPosition = 0)
+{
+	if (startPosition > 1530)
+		startPosition = 1530;
+
+	_colorWheelIncDelay = colorWheelIncDelay;
+	_colorWheelPosition = startPosition;
+	setState(DO_COLOR_WHEEL);
 }
 
 // для пинов 3, 9, 10. Для 5 и 6 делать вручную, т.к. влияет на millis() и прочие
@@ -345,7 +368,7 @@ void GRGB::fadeTo(byte new_r, byte new_g, byte new_b, uint16_t fadeTime) {
 	setState(DO_FADE_TO);
 }
 
-void GRGB::colorWheel(int color) {
+void GRGB::colorWheel(uint16_t color) {
 	if (color <= 255) {						// красный макс, зелёный растёт
       _r = 255;
       _g = color;

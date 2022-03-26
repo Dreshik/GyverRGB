@@ -6,6 +6,7 @@
 #define LED_OFF     0
 #define DO_NOTHIHG  1
 #define DO_FADE_TO  2
+#define DO_COLOR_WHEEL 3
 
 #define R           0
 #define G           1
@@ -69,7 +70,7 @@ class GRGB
 	void setHSV(uint8_t h, uint8_t s, uint8_t v);		// установка цвета в пространстве HSV (каждая велиична 0-255)
 	void setHSV_fast(uint8_t h, uint8_t s, uint8_t v);	// более быстрый, но менее красивый вариант предыдущей функции
 	void setKelvin(int16_t temperature);				// установить цвет как температуру в Кельвинах (от 1000 до 10'000 - от красного к синему)
-	void colorWheel(int color);							// установить цвет (0 - 1530). Максимально широкая палитра ярких цветов (смеси RGB)
+	void colorWheel(uint16_t color);							// установить цвет (0 - 1530). Максимально широкая палитра ярких цветов (смеси RGB)
 	
 	// плавно изменить текущий цвет к новому за вермя fadeTime в миллисекундах
 	// для HEX цвета
@@ -82,6 +83,7 @@ class GRGB
 
 	void setState(uint8_t new_state);
 	void tick();
+	void moveColorWheel(uint32_t colorWheelIncDelay, uint16_t startPosition);
 
   private:
 	void setRGB();
@@ -90,6 +92,9 @@ class GRGB
 	uint8_t _state = DO_NOTHIHG;
 	float _stepsFadeTo[3];
 	uint8_t _newColorFadeTo[3];
+	uint16_t _colorWheelPosition = 0;
+	uint32_t _colorWheelIncDelay = 0;
+	uint32_t _previousEventTimeMS = 0;			// время предыдущего события
 	boolean _reverse_flag = false;
 	boolean _PWMmode = false;
 	boolean _brightFlag = false;
